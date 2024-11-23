@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap, fs::File, io::{BufRead, BufReader}, path::Path
+    collections::HashMap, fmt::Display, fs::File, io::{BufRead, BufReader}, path::Path
 };
 
 pub struct CityState {
@@ -31,6 +31,12 @@ impl CityState {
     }
 }
 
+impl Display for CityState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+      write!(f, "{:.1}/{:.1}/{:.1}", self.min, self.mean(), self.max)
+    }
+}
+
 pub fn create_buffered_reader(path: &Path) -> BufReader<File> {
     let file = File::open(path).expect("file open");
     BufReader::new(file)
@@ -45,16 +51,13 @@ pub fn read_file(path: &Path) -> HashMap<String, CityState> {
         if bytes_read == 0 {
             break;
         }
-        let record: Vec<&str> = current_line.splitn(2, ';').collect();
-        let city_name = record.get(0).expect("city name missing").to_string();
-        let temperature: f32 = record
-            .get(1)
-            .expect("reading missing")
+        let (city_name, value) = current_line.split_once(';').expect("invalid format");
+        let temperature: f32 = value
             .trim()
             .parse()
             .expect("invalid float");
 
-        map.entry(city_name).or_insert_with(|| CityState::new(temperature)).update(temperature);
+        map.entry(city_name.to_string()).or_insert_with(|| CityState::new(temperature)).update(temperature);
 
         current_line.clear();
     }
