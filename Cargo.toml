@@ -1,0 +1,10 @@
+[package]
+name = "abrc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[[bin]]
+name = "1brc"
+path = "src/main.rs"
