@@ -1,6 +1,8 @@
 use std::{
-    collections::HashMap, fmt::Display, fs::File, io::{BufRead, BufReader}, path::Path
+  collections::HashMap, fmt::Display, fs::File, io::{BufRead, BufReader}, path::Path
 };
+
+use ahash::RandomState;
 
 pub struct CityState {
     pub min: f32,
@@ -42,20 +44,17 @@ pub fn create_buffered_reader(path: &Path) -> BufReader<File> {
     BufReader::new(file)
 }
 
-pub fn read_file(path: &Path) -> HashMap<String, CityState> {
+pub fn read_file(path: &Path) -> HashMap<String, CityState, RandomState> {
     let mut reader = create_buffered_reader(path);
     let mut current_line = String::with_capacity(200); // 2 bytes * 100 characters UTF-8
-    let mut map = HashMap::new();
+    let mut map: HashMap<String, CityState, RandomState> = HashMap::default();
     loop {
         let bytes_read = reader.read_line(&mut current_line).expect("read line");
         if bytes_read == 0 {
             break;
         }
         let (city_name, value) = current_line.split_once(';').expect("invalid format");
-        let temperature: f32 = value
-            .trim()
-            .parse()
-            .expect("invalid float");
+        let temperature = fast_float::parse(value.trim()).expect("invalid float");
 
         map.entry(city_name.to_string()).or_insert_with(|| CityState::new(temperature)).update(temperature);
 
